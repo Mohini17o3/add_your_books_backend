@@ -1,0 +1,17 @@
+name: Keeping the server awake 
+
+env:
+  BACKEND_URL: ${{ secrets.BACKEND_URL }}
+  
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+
+jobs:
+  ping-server: 
+      runs-on: ubuntu-latest
+      steps: 
+        - name: send request to server
+          run: curl -X GET $BACKEND_URL || echo "Server unreachable" 
+    
+    
