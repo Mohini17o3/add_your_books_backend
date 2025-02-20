@@ -7,14 +7,13 @@ const prisma = new PrismaClient() ;
 router.get('/books' , async (req , res) => {
    // for fetching top three books 
   try {
- 
-     const {email} = req.user ;
-     if(!email) {
-        return res.status(400).json({error : "Unauthorised access"}) ; 
-     } 
-      
-     const user = await prisma.user.findUnique({
-         where :  {email} , 
+
+   const userId = req.user.userId;
+   if (!userId) {
+      return res.status(401).json({ error: "Unauthorized: No user ID found" });
+    }
+   const user = await prisma.user.findUnique({
+       where: { id: userId },
          include  : {
             book : {
                where :  {status : "read"} ,
@@ -52,6 +51,7 @@ router.post("/api/add-book" ,async(req , res )=>{
   if(!userId) {
    return res.status(400).json({ error: "Unauthorized access" });
 }
+const authorString = Array.isArray(author) ? author.join(', ') : author ;
 
 try {
 
@@ -61,7 +61,7 @@ try {
             has : userId , 
          } ,      
          title : title , 
-         author : author , 
+         author : authorString, 
       }  , 
    })
    
@@ -72,7 +72,7 @@ try {
    const newBook = await prisma.books.create({
       data  : {
          title : title , 
-         author : author , 
+         author : authorString, 
          status : status , 
          cover_url : cover_url  , 
          start_date : new Date(start_date) , 
@@ -85,6 +85,15 @@ try {
       }
     
    })
+
+   await prisma.user.update({
+      where: { id: userId },
+      data: {
+        bookId: {
+          push: newBook.id, 
+        },
+      },
+    });
    
    return res.status(200).json({newBook});
 
@@ -102,24 +111,34 @@ router.delete("/api/remove-book" ,async(req , res)=>{
    try  {
    const {title , author} = req.body ;
    const user = req.user ; 
-   const userId = user.id ; 
+   const userId = user.userId ; 
  
    if (!user) {
       return res.status(400).json({ error: "Unauthorized access" });
     }
-
+const authorString = Array.isArray(author) ? author.join(', ') : author ;
 
    let book  = await prisma.books.findFirst({
       where : {
-          userId : userId,
+          userId : {
+            has:userId
+          },
           title : title , 
-          author : author ,  
+          author : authorString ,  
       } , 
    }) ;
 
    if(!book) {
       return res.status(404).json({error : "Book not found"}) ;
    }
+   await prisma.user.update({
+      where: { id: userId },
+      data: {
+        bookId: {
+          set: (await prisma.user.findUnique({ where: { id: userId } })).bookId.filter(id => id !== book.id),
+        },
+      },
+    });
 
    await prisma.books.delete({
        where : {id : book.id} , 
@@ -131,9 +150,6 @@ router.delete("/api/remove-book" ,async(req , res)=>{
    return res.status(500).json({error :"Internal server error"});
 }  
 }) 
-
-
-
 
  
 router.get("/api/books/read" , async(req , res)=>{
@@ -147,7 +163,9 @@ router.get("/api/books/read" , async(req , res)=>{
 
       const books =await prisma.books.findMany({
          where : {
-            userId : user.id, 
+            userId : {
+               has : user.userId
+            }, 
             status  : "read",
          }
       }) ;
@@ -174,7 +192,9 @@ router.get("/api/books/toread" , async(req , res) => {
 
       const books = await prisma.books.findMany({
          where : {
-            userId : user.id , 
+            userId :{
+               has :  user.userId , 
+            },
             status : "to-read" ,   
          }
       }) ;
