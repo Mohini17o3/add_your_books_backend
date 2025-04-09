@@ -29,7 +29,7 @@ model Books {
   cover_url  String
   start_date DateTime?
   end_date   DateTime?
-  rating     String?
+  rating     Float?
   review     String?
   date_added DateTime  @default(now())
   status     String

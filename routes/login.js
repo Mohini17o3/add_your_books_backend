@@ -28,7 +28,7 @@ const secret = process.env.TOKEN_SECRET ;
                if(!comparePassword) {
                   return res.status(401).json({error : "password provided is wrong"}) ;
                }
-               const token = jwt.sign({userId : userExists.id }, secret ,  {expiresIn:'2h'}) ;
+               const token = jwt.sign({userId : userExists.id }, secret ,  {expiresIn:'6d'}) ;
                res.status(200).json({token});
           } else {
             return res.status(401).json({error : "Authenticaation failed ."});
