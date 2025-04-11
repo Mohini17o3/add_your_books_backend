@@ -22,14 +22,16 @@ const secret = process.env.TOKEN_SECRET ;
             }
            const userExists = await prisma.user.findUnique({
             where : {email}
-           })
+           }) ; 
+
           if(userExists){
             const comparePassword  = await bcrypt.compare(password , userExists.password);
                if(!comparePassword) {
                   return res.status(401).json({error : "password provided is wrong"}) ;
                }
+               const { id, name, email } = userExists;
                const token = jwt.sign({userId : userExists.id }, secret ,  {expiresIn:'6d'}) ;
-               res.status(200).json({token});
+               res.status(200).json({token , user: { id, name, email }});
           } else {
             return res.status(401).json({error : "Authenticaation failed ."});
           } 

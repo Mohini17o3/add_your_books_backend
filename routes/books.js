@@ -173,7 +173,6 @@ router.get("/api/books/read" , async(req , res)=>{
       if(!books) {
          return res.status(200).json({message : "No books read yet"});
       }
-
       return res.status(200).json({books});
    }catch(error) {
       console.error(error) ;
