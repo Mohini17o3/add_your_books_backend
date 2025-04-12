@@ -18,7 +18,7 @@ const prisma = new PrismaClient();
             }) ;
 
             if(existingUser) {
-                return res.status(400).json({error : "This email is already registered"});
+                return res.status(400).json({message : "This email is already registered"});
             }
 
             const hashedPassword = await bcrypt.hash(password , 10) ;

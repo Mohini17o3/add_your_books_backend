@@ -27,13 +27,13 @@ const secret = process.env.TOKEN_SECRET ;
           if(userExists){
             const comparePassword  = await bcrypt.compare(password , userExists.password);
                if(!comparePassword) {
-                  return res.status(401).json({error : "password provided is wrong"}) ;
+                  return res.status(401).json({message : "password provided is wrong"}) ;
                }
                const { id, name, email } = userExists;
                const token = jwt.sign({userId : userExists.id }, secret ,  {expiresIn:'6d'}) ;
                res.status(200).json({token , user: { id, name, email }});
           } else {
-            return res.status(401).json({error : "Authenticaation failed ."});
+            return res.status(401).json({message : "Authenticaation failed ."});
           } 
   
      } catch(e) {
