@@ -11,7 +11,7 @@ dotenv.config() ;
 const router = Router() ; 
 const prisma = new PrismaClient();
 const secret = process.env.TOKEN_SECRET ; 
-
+const refreshSecret = process.env.REFRESH_SECRET ; 
 
     router.post('/login' , async(req , res)=>{
         const {email , password } = req.body ;
@@ -30,8 +30,17 @@ const secret = process.env.TOKEN_SECRET ;
                   return res.status(401).json({message : "password provided is wrong"}) ;
                }
                const { id, name, email } = userExists;
-               const token = jwt.sign({userId : userExists.id }, secret ,  {expiresIn:'6d'}) ;
-               res.status(200).json({token , user: { id, name, email }});
+               const accessToken = jwt.sign({userId : userExists.id }, secret ,  {expiresIn:'1h'}) ;
+               const refreshToken = jwt.sign({userId : userExists.id} , refreshSecret , {expiresIn : '7d'}) ;
+             // refresh token only in cookie 
+               res.cookie('refreshToken' , refreshToken , {
+                  httpOnly : true , 
+                  secure : true , 
+                  sameSite : 'Strict' , 
+                  maxAge : 7 * 24 * 60 * 60 * 1000  // 7 days
+               })
+               // access token in response
+               res.status(200).json({token :accessToken, user: { id, name, email }});
           } else {
             return res.status(401).json({message : "Authenticaation failed ."});
           } 
@@ -41,8 +50,8 @@ const secret = process.env.TOKEN_SECRET ;
             res.status(500).send({message : "Internal Server error"}) ;
          }
 
-    })
+    }) ;
 
-
+    
 export default router; 
 

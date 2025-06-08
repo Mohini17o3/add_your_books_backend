@@ -5,13 +5,17 @@ import login from  './routes/login.js' ;
 import bookRoutes from  './routes/books.js' ;
 import leaderboardRoutes from './routes/leaderboard.js' ; 
 import authmiddleware from "./middlewares/authmiddleware.js" ; 
+import refreshTokenRoutes from "./routes/refreshToken.js"
 import cors from  'cors' ;
+import cookieParser from 'cookie-parser';
 
 
 const app = express () ;
-app.use(bodyParser.json());
-app.use(cors());
 
+app.use(cors({
+    credentials: true, origin :[ "http://localhost:5173" , "https://add-your-books.vercel.app"]}) );
+app.use(bodyParser.json());
+app.use(cookieParser()) ;
 
 app.post('/register', register) ;
 app.post('/login', login) ;
@@ -21,6 +25,7 @@ app.delete('/api/remove-book', authmiddleware ,bookRoutes) ;
 app.get('/api/books/read', authmiddleware ,bookRoutes) ; 
 app.get('/api/books/toread', authmiddleware ,bookRoutes) ; 
 app.get('/leaderboard', authmiddleware ,leaderboardRoutes) ; 
+app.post('/refresh-token',refreshTokenRoutes) ; 
 
 
 app.listen(8000 , ()=>{
